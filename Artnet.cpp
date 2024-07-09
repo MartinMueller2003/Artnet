@@ -24,15 +24,19 @@ THE SOFTWARE.
 
 #include <Artnet.h>
 
-Artnet::Artnet() {}
+Artnet::Artnet()
+{
+    setArtDmxCallback(nullptr);
+    setArtPollCallback(nullptr);
+    setArtSyncCallback(nullptr);
+}
 
 void Artnet::begin(byte mac[], byte ip[])
 {
   #if !defined(ARDUINO_SAMD_ZERO) && !defined(ESP8266) && !defined(ESP32)
     Ethernet.begin(mac,ip);
   #endif
-
-  Udp.begin(ART_NET_PORT);
+    begin();
 }
 
 void Artnet::begin()
@@ -88,17 +92,20 @@ uint16_t Artnet::read()
         incomingUniverse = artnetPacket[14] | artnetPacket[15] << 8;
         dmxDataLength = artnetPacket[17] | artnetPacket[16] << 8;
 
-        if (artDmxCallback) (*artDmxCallback)(incomingUniverse, dmxDataLength, sequence, artnetPacket + ART_DMX_START, remoteIP);
+        if (nullptr != artDmxCallback) (*artDmxCallback)(incomingUniverse, dmxDataLength, sequence, artnetPacket + ART_DMX_START, remoteIP);
         return ART_DMX;
       }
       if (opcode == ART_POLL)
       {
-        //fill the reply struct, and then send it to the network's broadcast address
+        if (nullptr != artDmxPollCallback) (*artDmxPollCallback)(broadcast);
+        /* not all systems use Serial. Let the callback do the printing
         Serial.print("POLL from ");
         Serial.print(remoteIP);
         Serial.print(" broadcast addr: ");
         Serial.println(broadcast);
+        */
 
+        //fill the reply struct, and then send it to the network's broadcast address
         #if !defined(ARDUINO_SAMD_ZERO) && !defined(ESP8266) && !defined(ESP32)
           IPAddress local_ip = Ethernet.localIP();
         #else
@@ -167,7 +174,7 @@ uint16_t Artnet::read()
       }
       if (opcode == ART_SYNC)
       {
-        if (artSyncCallback) (*artSyncCallback)(remoteIP);
+        if (nullptr != artSyncCallback) (*artSyncCallback)(remoteIP);
         return ART_SYNC;
       }
   }

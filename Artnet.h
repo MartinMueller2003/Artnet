@@ -145,6 +145,11 @@ public:
     artDmxCallback = fptr;
   }
 
+  inline void setArtPollCallback(void (*fptr)(IPAddress broadcastIP))
+  {
+    artDmxPollCallback = fptr;
+  }
+
   inline void setArtSyncCallback(void (*fptr)(IPAddress remoteIP))
   {
     artSyncCallback = fptr;
@@ -170,6 +175,7 @@ private:
   uint16_t dmxDataLength;
   IPAddress remoteIP;
   void (*artDmxCallback)(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data, IPAddress remoteIP);
+  void (*artDmxPollCallback)(IPAddress broadcastIP);
   void (*artSyncCallback)(IPAddress remoteIP);
 };
 
